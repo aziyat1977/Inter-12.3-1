@@ -3,21 +3,13 @@ import { TeacherCard } from './TeacherCard';
 import { SoundType } from '../types';
 
 interface Props {
+  step: number;
   isTeacher: boolean;
   playSound: (type: SoundType) => void;
 }
 
-const PAIRS = [
-  {w: "Famous", p: "FOR"},
-  {w: "Rely", p: "ON"},
-  {w: "Good", p: "AT"},
-  {w: "Afraid", p: "OF"},
-  {w: "Angry", p: "WITH"},
-  {w: "Succeed", p: "IN"},
-  {w: "Similar", p: "TO"},
-  {w: "Different", p: "FROM"},
-  {w: "Interested", p: "IN"}
-];
+const PAIRS_1 = [{w: "Famous", p: "FOR"}, {w: "Rely", p: "ON"}, {w: "Good", p: "AT"}];
+const PAIRS_2 = [{w: "Angry", p: "WITH"}, {w: "Afraid", p: "OF"}, {w: "Similar", p: "TO"}];
 
 interface CardItem {
   id: string; 
@@ -28,126 +20,99 @@ interface CardItem {
   state: 'idle' | 'wrong';
 }
 
-export const PageVocab: React.FC<Props> = ({ isTeacher, playSound }) => {
+export const PageVocab: React.FC<Props> = ({ step, isTeacher, playSound }) => {
   const [cards, setCards] = useState<CardItem[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    const newCards: CardItem[] = [];
-    PAIRS.forEach((pair, idx) => {
-      newCards.push({ id: `w-${idx}`, pairId: idx, text: pair.w, isSolved: false, isFlipped: false, state: 'idle' });
-      newCards.push({ id: `p-${idx}`, pairId: idx, text: pair.p, isSolved: false, isFlipped: false, state: 'idle' });
-    });
-    setCards(newCards.sort(() => Math.random() - 0.5));
-  }, []);
+    let currentPairs = [];
+    if (step === 3) currentPairs = PAIRS_1;
+    if (step === 4) currentPairs = PAIRS_2;
+    if (step === 5) currentPairs = [...PAIRS_1, ...PAIRS_2];
+
+    if (currentPairs.length > 0) {
+      const newCards: CardItem[] = [];
+      currentPairs.forEach((pair, idx) => {
+        newCards.push({ id: `w-${idx}`, pairId: idx, text: pair.w, isSolved: false, isFlipped: false, state: 'idle' });
+        newCards.push({ id: `p-${idx}`, pairId: idx, text: pair.p, isSolved: false, isFlipped: false, state: 'idle' });
+      });
+      setCards(newCards.sort(() => Math.random() - 0.5));
+      setSelectedCardId(null);
+    }
+  }, [step]);
 
   const handleCardClick = (id: string) => {
-    if (isProcessing) return;
     const clickedCard = cards.find(c => c.id === id);
     if (!clickedCard || clickedCard.isSolved || clickedCard.isFlipped) return;
 
-    // Flip the clicked card
     setCards(prev => prev.map(c => c.id === id ? { ...c, isFlipped: true } : c));
-    playSound(SoundType.Whistle);
-
+    
     if (!selectedCardId) {
       setSelectedCardId(id);
-      return;
-    }
-
-    // Check Match
-    const firstCard = cards.find(c => c.id === selectedCardId);
-    if (!firstCard) return;
-
-    setIsProcessing(true);
-
-    if (firstCard.pairId === clickedCard.pairId) {
-      // Match found
-      setTimeout(() => {
-        playSound(SoundType.Correct);
-        setCards(prev => prev.map(c => 
-          (c.id === id || c.id === selectedCardId) 
-            ? { ...c, isSolved: true } 
-            : c
-        ));
-        setSelectedCardId(null);
-        setIsProcessing(false);
-      }, 500);
     } else {
-      // No Match
-      setTimeout(() => {
-        playSound(SoundType.Wrong);
-        setCards(prev => prev.map(c => 
-          (c.id === id || c.id === selectedCardId) 
-            ? { ...c, state: 'wrong' } 
-            : c
-        ));
-      }, 500);
-
-      setTimeout(() => {
-        setCards(prev => prev.map(c => 
-          (c.id === id || c.id === selectedCardId) 
-            ? { ...c, isFlipped: false, state: 'idle' } 
-            : c
-        ));
+      const firstCard = cards.find(c => c.id === selectedCardId);
+      if (firstCard && firstCard.pairId === clickedCard.pairId) {
+        playSound(SoundType.Correct);
+        setCards(prev => prev.map(c => (c.id === id || c.id === selectedCardId) ? { ...c, isSolved: true } : c));
         setSelectedCardId(null);
-        setIsProcessing(false);
-      }, 1500);
+      } else {
+        playSound(SoundType.Wrong);
+        setTimeout(() => {
+          setCards(prev => prev.map(c => (c.id === id || c.id === selectedCardId) ? { ...c, isFlipped: false } : c));
+          setSelectedCardId(null);
+        }, 1000);
+      }
     }
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto animate-slide-in">
-      <h1 className="text-5xl md:text-6xl text-center font-display mb-4 text-shadow-neon">SECOND HALF: TEAMMATES 🤝</h1>
-      <h2 className="text-secondary text-2xl font-bold mb-8 text-center tracking-widest">Connect the Married Words</h2>
+    <div className="w-full h-full flex flex-col items-center justify-center animate-slide-in min-h-[60vh] text-center">
+      
+      {/* STEP 1: INTRO */}
+      {step === 1 && (
+        <>
+           <h1 className="text-7xl md:text-9xl font-display mb-8 text-shadow-neon">SECOND HALF</h1>
+           <h2 className="text-4xl md:text-6xl font-black text-accent">TEAMMATES</h2>
+           <p className="text-2xl mt-8 max-w-2xl font-bold">"Some words are married. They never play alone."</p>
+        </>
+      )}
 
-      <div className="bg-card-bg/80 backdrop-blur-md p-6 rounded-3xl shadow-2xl border border-white/10 mb-8">
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-4 perspective-[1000px]">
-          {cards.map(card => (
-            <div
-              key={card.id}
-              onClick={() => handleCardClick(card.id)}
-              className={`relative h-24 md:h-32 cursor-pointer transition-all duration-500 preserve-3d ${card.isFlipped || card.isSolved ? 'rotate-y-180' : ''}`}
-            >
-              {/* Back of Card (Hidden initially) */}
-              <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-800 to-black rounded-xl shadow-lg border-2 border-white/20 flex items-center justify-center backface-hidden hover:border-accent">
-                 <span className="text-3xl opacity-20">⚽</span>
+      {/* STEP 2: RED CARD RULE */}
+      {step === 2 && (
+        <div className="card-3d bg-red-600 p-12 rounded-[3rem] text-white shadow-[0_0_60px_red] animate-pulse">
+           <div className="text-[8rem] mb-4">🟥</div>
+           <h2 className="text-6xl md:text-8xl font-black mb-8">RED CARD!</h2>
+           <p className="text-4xl md:text-5xl font-bold mb-4 line-through opacity-50">"Good IN football"</p>
+           <p className="text-5xl md:text-7xl font-black bg-white text-red-600 px-8 py-4 rounded-xl transform rotate-[-2deg]">"Good AT football"</p>
+        </div>
+      )}
+
+      {/* STEPS 3, 4, 5: MEMORY GAME */}
+      {(step >= 3 && step <= 5) && (
+        <div className="w-full max-w-5xl">
+          <h2 className="text-3xl md:text-4xl font-black mb-12 opacity-60">MATCH THE PAIRS</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            {cards.map(card => (
+              <div
+                key={card.id}
+                onClick={() => handleCardClick(card.id)}
+                className={`h-40 cursor-pointer perspective-[1000px] group`}
+              >
+                <div className={`relative w-full h-full transition-all duration-500 transform preserve-3d ${card.isFlipped || card.isSolved ? 'rotate-y-180' : ''}`}>
+                  {/* Back */}
+                  <div className="absolute inset-0 bg-white/10 border-4 border-white/30 rounded-3xl flex items-center justify-center backface-hidden group-hover:bg-white/20">
+                    <span className="text-5xl opacity-50">⚽</span>
+                  </div>
+                  {/* Front */}
+                  <div className={`absolute inset-0 rounded-3xl flex items-center justify-center backface-hidden rotate-y-180 ${card.isSolved ? 'bg-green-500 text-white' : 'bg-white text-black'}`}>
+                    <span className="text-3xl md:text-4xl font-black">{card.text}</span>
+                  </div>
+                </div>
               </div>
-
-              {/* Front of Card (Revealed on flip) */}
-              <div className={`absolute inset-0 w-full h-full rounded-xl shadow-xl flex items-center justify-center backface-hidden rotate-y-180 border-2 ${
-                card.isSolved ? 'bg-green-500 border-green-300' : 
-                card.state === 'wrong' ? 'bg-red-500 border-red-300' : 'bg-white border-accent'
-              }`}>
-                <span className={`font-bold text-sm md:text-lg ${card.isSolved || card.state === 'wrong' ? 'text-white' : 'text-gray-900'}`}>
-                  {card.text}
-                </span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex-1 card-3d bg-red-600/10 border-2 border-red-500 p-6 rounded-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 text-red-500/20 text-9xl font-display">VAR</div>
-          <h3 className="text-xl font-bold mb-2 text-red-500 animate-pulse">🟥 RED CARD ALERT</h3>
-          <p className="text-lg">Do NOT say: "Good IN football".</p>
-          <p className="text-lg">You MUST say: <strong className="text-white bg-red-600 px-2 py-1 rounded">"Good AT football"</strong>.</p>
-        </div>
-
-        <div className="flex-1">
-          <TeacherCard 
-            visible={isTeacher}
-            title="VOCAB (25-40 min)"
-            items={[
-              'Drill pronunciation: "Angry WITH" (person) vs "Angry ABOUT" (situation).',
-              'Game logic: 3D Flip Memory Game.'
-            ]}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 };
