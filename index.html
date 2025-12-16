@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>El Clásico English</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: 'var(--primary)',
+              secondary: 'var(--secondary)',
+              accent: 'var(--accent)',
+              bg: 'var(--bg)',
+              text: 'var(--text)',
+              'card-bg': 'var(--card-bg)',
+            },
+            fontFamily: {
+              sans: ['Montserrat', 'sans-serif'],
+              display: ['Bebas Neue', 'cursive'],
+            },
+            animation: {
+              'slide-in': 'slideIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+              'pulse-slow': 'pulse 2s infinite',
+              'flicker': 'flicker 0.2s infinite',
+              'bounce-slow': 'bounce 2s infinite',
+            },
+            keyframes: {
+              slideIn: {
+                '0%': { opacity: '0', transform: 'translateX(100px) rotateY(-10deg)' },
+                '100%': { opacity: '1', transform: 'translateX(0) rotateY(0)' },
+              },
+              flicker: {
+                '0%': { opacity: '0.9' },
+                '50%': { opacity: '1' },
+                '100%': { opacity: '0.9' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+      }
+      /* Custom scrollbar for webkit */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--accent);
+        border-radius: 4px;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
